@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exame Shodan </title>
-  <script type="module" src="auth.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,10 +13,12 @@
       --red: #8b0000;
       --red-dark: #660000;
       --bg-dark: #0a0a0f;
-      --bg-card: #1a1a2e;
+      --bg-card: #1a1ga2e;
       --bg-card-alt: #16213e;
       --text: #e8e8e8;
       --text-muted: #888;
+      --green: #2ecc71;
+      --error-red: #e74c3c;
     }
     body { min-height: 100vh; background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-card) 50%, var(--bg-dark) 100%); font-family: 'Noto Sans JP', sans-serif; color: var(--text); }
     .header { background: linear-gradient(90deg, var(--red) 0%, var(--red-dark) 50%, var(--red) 100%); border-bottom: 3px solid var(--gold); padding: 12px 24px; position: sticky; top: 0; z-index: 100; }
@@ -49,6 +50,22 @@
     .home-title span { color: var(--gold); font-weight: 700; }
     .home-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 8px; }
     .home-quote { color: var(--gold); font-style: italic; font-size: 13px; max-width: 600px; margin: 0 auto; }
+    
+    /* Search Bar */
+    .search-container { max-width: 600px; margin: 0 auto 32px; position: relative; }
+    .search-input { width: 100%; padding: 14px 48px 14px 20px; background: rgba(26, 26, 46, 0.9); border: 2px solid rgba(212, 175, 55, 0.3); border-radius: 30px; color: var(--text); font-size: 15px; font-family: inherit; outline: none; transition: all 0.3s; }
+    .search-input:focus { border-color: var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+    .search-input::placeholder { color: #666; }
+    .search-icon { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--gold); font-size: 20px; pointer-events: none; }
+    .search-results { position: absolute; top: 100%; left: 0; right: 0; background: rgba(26, 26, 46, 0.98); border: 1px solid var(--gold); border-radius: 12px; margin-top: 8px; max-height: 400px; overflow-y: auto; z-index: 1000; display: none; }
+    .search-results.active { display: block; }
+    .search-result-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid rgba(212, 175, 55, 0.1); transition: background 0.2s; }
+    .search-result-item:hover { background: rgba(139, 0, 0, 0.3); }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-section { font-size: 11px; color: var(--gold); margin-bottom: 4px; }
+    .search-result-title { color: #fff; font-size: 14px; }
+    .search-no-results { padding: 20px; text-align: center; color: #888; }
+    
     .home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
     .home-card { background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-alt) 100%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 16px; padding: 24px 18px; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
     .home-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0; transition: opacity 0.3s; }
@@ -351,6 +368,8 @@
     .quiz-menu-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .quiz-menu-title { color: #fff; font-size: 16px; margin-bottom: 6px; }
     .quiz-menu-count { color: var(--text-muted); font-size: 13px; }
+    .quiz-menu-stats { font-size: 11px; color: var(--green); margin-top: 4px; }
+    .quiz-menu-stats.not-started { color: var(--text-muted); }
     .quiz-menu-icon { font-size: 36px; color: var(--gold); font-family: 'Playfair Display', serif; }
     .quiz-container { max-width: 680px; margin: 0 auto; }
     .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -379,6 +398,19 @@
     .quiz-result-buttons { display: flex; justify-content: center; gap: 14px; }
     
     /* Videos */
+    .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .video-card { background: rgba(26, 26, 46, 0.8); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 12px; padding: 16px; transition: all 0.3s; }
+    .video-card:hover { border-color: var(--gold); }
+    .video-badge { display: inline-block; background: rgba(139, 0, 0, 0.6); color: var(--gold); font-size: 10px; padding: 4px 10px; border-radius: 20px; margin-bottom: 10px; }
+    .video-title { color: #fff; font-size: 15px; margin-bottom: 4px; }
+    .video-subtitle { color: #888; font-size: 12px; margin-bottom: 12px; }
+    .video-box { position: relative; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; cursor: pointer; }
+    .video-box iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+    .video-thumbnail { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .video-box:hover .video-thumbnail { transform: scale(1.05); }
+    .video-play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: var(--red); border: 3px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; color: var(--gold); font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+    .video-box:hover .video-play-btn { background: var(--red-dark); transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
+    .video-box.playing .video-thumbnail, .video-box.playing .video-play-btn { display: none; }
     .video-link { display: flex; align-items: center; gap: 12px; padding: 16px 20px; background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3); border-radius: 12px; color: #fff; text-decoration: none; transition: all 0.3s; margin-bottom: 12px; }
     .video-link:hover { background: rgba(255, 0, 0, 0.2); transform: translateX(4px); }
     .video-link-icon { font-size: 28px; }
@@ -443,7 +475,7 @@
     .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .stat-card { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 18px; text-align: center; border: 1px solid rgba(212, 175, 55, 0.15); }
     .stat-value { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
-    .stat-value.green { color: #4ade80; }
+    .stat-value.green { color: var(--green); }
     .stat-value.red { color: #e74c3c; }
     .stat-value.gold { color: var(--gold); }
     .stat-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
@@ -477,6 +509,13 @@
     .org-list li { padding: 10px 0; color: #ccc; font-size: 13px; border-bottom: 1px solid rgba(212, 175, 55, 0.1); display: flex; align-items: flex-start; gap: 10px; }
     .org-list li:last-child { border-bottom: none; }
     .org-list li::before { content: '▸'; color: var(--gold); }
+    .org-table { width: 100%; border-collapse: collapse; }
+    .org-table th, .org-table td { padding: 12px 8px; text-align: center; font-size: 13px; border: none; }
+    .org-table th { color: var(--gold); font-weight: 600; font-size: 14px; padding-bottom: 16px; }
+    .org-table td { color: #ccc; }
+    .org-table tr:nth-child(even) td { background: rgba(212, 175, 55, 0.05); }
+    .org-table .peso-val { font-weight: 600; color: #fff; }
+    .org-table .peso-nome { color: var(--text-muted); font-size: 12px; }
     
     /* Primeiros Socorros */
     .socorro-card { background: rgba(26, 26, 46, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
@@ -515,6 +554,7 @@
       .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
+  <script type="module" src="auth.js"></script>
 </head>
 <body>
   <header class="header">
@@ -604,6 +644,104 @@ const homeCards = [
   { title: 'Vídeos', desc: 'Playlist de demonstrações', icon: '映', section: 'videos' },
 ];
 
+const searchIndex = [
+  { section: 'historia', title: 'Jigoro Kano', keywords: 'fundador criador pai judo kodokan 1882' },
+  { section: 'historia', title: 'Kodokan', keywords: 'instituto escola fundação história origem' },
+  { section: 'historia', title: 'Olimpíadas', keywords: 'olimpico 1964 toquio jogos medalha' },
+  { section: 'historia', title: 'Mitsuyo Maeda', keywords: 'conde koma brasil gracie belém' },
+  { section: 'principios', title: 'Seiryoku Zenyo', keywords: 'eficiência energia principio filosofia' },
+  { section: 'principios', title: 'Jita Kyoei', keywords: 'benefício mútuo prosperidade principio' },
+  { section: 'principios', title: 'Código Moral', keywords: 'cortesia coragem sinceridade honra respeito' },
+  { section: 'etiqueta', title: 'Saudações (Rei)', keywords: 'ritsu-rei za-rei saudação cumprimento' },
+  { section: 'etiqueta', title: 'Estrutura do Dojô', keywords: 'kamiza shimoza joseki tatame' },
+  { section: 'nomenclatura', title: 'Termos Básicos', keywords: 'japonês palavras significado tradução' },
+  { section: 'nomenclatura', title: 'Números', keywords: 'ichi ni san numeros contar japonês' },
+  { section: 'nomenclatura', title: 'Partes do Corpo', keywords: 'te ashi koshi mimi' },
+  { section: 'gokyo', title: 'O-Soto-Gari', keywords: 'ceifa externa grande perna projeção' },
+  { section: 'gokyo', title: 'Seoi-Nage', keywords: 'costas projeção braço ombro' },
+  { section: 'gokyo', title: 'Uchi-Mata', keywords: 'coxa interna perna projeção' },
+  { section: 'gokyo', title: 'Ippon Seoi-Nage', keywords: 'ombro braço único projeção' },
+  { section: 'gokyo', title: 'Harai-Goshi', keywords: 'quadril varrer projeção' },
+  { section: 'katameWaza', title: 'Imobilizações', keywords: 'osaekomi kesa shiho gatame solo' },
+  { section: 'katameWaza', title: 'Estrangulamentos', keywords: 'shime jime hadaka sankaku choke' },
+  { section: 'katameWaza', title: 'Chaves', keywords: 'kansetsu juji garami armlock braço' },
+  { section: 'regras', title: 'Pontuação', keywords: 'ippon wazari yuko ponto score' },
+  { section: 'regras', title: 'Penalidades', keywords: 'shido hansoku penalidade falta' },
+  { section: 'regras', title: 'Tempo de Luta', keywords: 'tempo duração minutos golden score' },
+  { section: 'regras2025', title: 'Yuko 2025', keywords: 'novo pontuação mudança regra' },
+  { section: 'regras2025', title: 'Novas Regras 2025', keywords: 'ijf mudanças atualizações' },
+  { section: 'nageNoKata', title: 'Nage no Kata', keywords: 'forma projeção kata 15 técnicas' },
+  { section: 'nageNoKata', title: 'Te-Waza', keywords: 'técnicas mão braço kata' },
+  { section: 'nageNoKata', title: 'Koshi-Waza', keywords: 'técnicas quadril kata' },
+  { section: 'katameNoKata', title: 'Katame no Kata', keywords: 'forma solo kata imobilização' },
+  { section: 'katameNoKata', title: 'Osaekomi-Waza', keywords: 'imobilização chão domínio' },
+  { section: 'katas', title: 'Kata', keywords: 'forma demonstração sequência técnicas' },
+  { section: 'treinos', title: 'Uchi-Komi', keywords: 'repetição entrada treino' },
+  { section: 'treinos', title: 'Randori', keywords: 'treino livre prática' },
+  { section: 'treinos', title: 'Shiai', keywords: 'competição luta torneio' },
+  { section: 'organizacao', title: 'Federações', keywords: 'ijf cbj federação confederação' },
+  { section: 'organizacao', title: 'Categorias', keywords: 'peso idade cadete junior senior' },
+  { section: 'escolar', title: 'Faixas Infantis', keywords: 'cinza azul amarela criança graduação' },
+  { section: 'escolar', title: 'Pedagogia', keywords: 'ensino criança didática infantil' },
+  { section: 'socorros', title: 'Emergências', keywords: 'socorro primeiros contusão desmaio lesão' },
+  { section: 'socorros', title: 'Lesões', keywords: 'machucado ferimento trauma' },
+  { section: 'inclusivo', title: 'TEA', keywords: 'autismo espectro adaptação' },
+  { section: 'inclusivo', title: 'TDAH', keywords: 'déficit atenção hiperatividade' },
+  { section: 'inclusivo', title: 'Adaptações', keywords: 'inclusão especial adaptado deficiência' },
+  { section: 'videos', title: 'Vídeos', keywords: 'video demonstração técnica assistir youtube' },
+  { section: 'flashcardsMenu', title: 'Flashcards', keywords: 'estudo cartão revisão memorização' },
+  { section: 'quizMenu', title: 'Quizzes', keywords: 'teste perguntas avaliação exame' },
+];
+
+// ==================== SEARCH FUNCTIONS ====================
+function initSearch() {
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  if (!searchInput || !searchResults) return;
+  
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    if (query.length < 2) {
+      searchResults.classList.remove('active');
+      return;
+    }
+    
+    const results = searchIndex.filter(item => 
+      item.title.toLowerCase().includes(query) || 
+      item.keywords.toLowerCase().includes(query)
+    );
+    
+    if (results.length > 0) {
+      searchResults.innerHTML = results.slice(0, 8).map(r => `
+        <div class="search-result-item" onclick="goToSearch('${r.section}')">
+          <div class="search-result-section">${getSectionTitle(r.section)}</div>
+          <div class="search-result-title">${r.title}</div>
+        </div>
+      `).join('');
+      searchResults.classList.add('active');
+    } else {
+      searchResults.innerHTML = '<div class="search-no-results">Nenhum resultado encontrado</div>';
+      searchResults.classList.add('active');
+    }
+  });
+  
+  searchInput.addEventListener('blur', () => {
+    setTimeout(() => searchResults.classList.remove('active'), 200);
+  });
+}
+
+function getSectionTitle(id) {
+  const item = navItems.find(n => n.id === id);
+  return item ? item.label : id;
+}
+
+function goToSearch(section) {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-results').classList.remove('active');
+  showSection(section);
+}
+
 const historyData = {
   founderFacts: [
     "Fundou o Judô em maio de 1882, criando o Kodokan em Tóquio aos 21 anos",
@@ -631,11 +769,11 @@ const historyData = {
   ],
   timeline: [
     { year: "1860", event: "28 de outubro - Nascimento de Jigoro Kano (nome: Shinnosuke) em Mikage, Província de Settsu (atual Hyōgo)" },
-    { year: "1877", event: "Kano começa a estudar Jiu-Jitsu na escola Tenjin Shin'yō-ryū" },
+    { year: "1877", event: "Kano começa a estudar Jujutsu na escola Tenjin Shin'yō-ryū" },
     { year: "1881", event: "Estuda na escola Kitō-ryū e obtém Menkyo (licença para ensinar)" },
     { year: "1882", event: "Maio - Fundação do Kodokan com 12 tatames (~24m²) em Tóquio" },
     { year: "1882", event: "5 de junho - Tsunejirō Tomita se torna o primeiro aluno oficial" },
-    { year: "1886", event: "Vitória decisiva do Kodokan sobre escola tradicional de Jiu-Jitsu" },
+    { year: "1886", event: "Vitória decisiva do Kodokan sobre escola tradicional de Jujutsu" },
     { year: "1891", event: "Kano se casa com Sumako Takezoe" },
     { year: "1895", event: "Gokyo no Waza é oficialmente estabelecido (40 técnicas em 5 grupos)" },
     { year: "1906", event: "Kodokan expande para 207 tatames" },
@@ -668,7 +806,7 @@ const historyData = {
     { country: "🇬🇷 Grécia/Roma", desc: "Pancrácio nos Jogos Olímpicos da Antiguidade. Gladiadores romanos praticavam diversas formas de combate." },
     { country: "🇪🇬 Egito", desc: "Pinturas em túmulos mostram sistema de luta similar ao boxe. Hieróglifos nas pirâmides registram técnicas." },
     { country: "🇮🇳 Índia", desc: "Mallayuddha - forma codificada mais antiga conhecida (5000 anos). Registrada no épico Mahabharata." },
-    { country: "🇯🇵 Japão", desc: "Jiu-Jitsu desde 238 a.C. Conceito 'ceder para vencer' inspirado no salgueiro. Arte dos samurais." },
+    { country: "🇯🇵 Japão", desc: "Jujutsu desde 238 a.C. Conceito 'ceder para vencer' inspirado no salgueiro. Arte dos samurais." },
   ],
   brazilTimeline: [
     { year: "1910s", event: "Takaharu Saigo ensina Judô em São Paulo para a comunidade japonesa" },
@@ -1060,7 +1198,7 @@ const quizData = {
     { q: 'O que significa "Kodokan"?', o: ['Casa do Judô', 'Instituto para estudar o Caminho', 'Escola de luta', 'Templo'], c: 1 },
     { q: 'Qual a causa da morte de Jigoro Kano?', o: ['Acidente', 'Pneumonia', 'Doença cardíaca', 'Velhice'], c: 1 },
     { q: 'Em que ano o Judô estreou nas Olimpíadas?', o: ['1960', '1964', '1968', '1972'], c: 1 },
-    { q: 'Quais escolas de Jiu-Jitsu Kano estudou?', o: ['Daito-ryu', "Tenjin Shin'yo-ryu e Kito-ryu", 'Aikijujutsu', 'Kashima'], c: 1 },
+    { q: 'Quais escolas de Jujutsu Kano estudou?', o: ['Daito-ryu', "Tenjin Shin'yo-ryu e Kito-ryu", 'Aikijujutsu', 'Kashima'], c: 1 },
     { q: 'O que é Menkyo?', o: ['Graduação', 'Licença para ensinar', 'Uniforme', 'Técnica'], c: 1 },
     { q: 'Onde nasceu Jigoro Kano?', o: ['Tóquio', 'Osaka', 'Mikage (Kobe)', 'Kyoto'], c: 2 },
     { q: 'Quantos tatames tinha o primeiro dojô do Kodokan?', o: ['6', '12', '20', '30'], c: 1 },
@@ -1073,7 +1211,7 @@ const quizData = {
     { q: 'Em que ano foi fundada a IJF?', o: ['1945', '1951', '1956', '1960'], c: 1 },
     { q: 'Quando o judô feminino entrou nas Olimpíadas?', o: ['1984', '1988', '1992', '1996'], c: 2 },
     { q: 'Onde foi a primeira Olimpíada com judô feminino?', o: ['Seul', 'Barcelona', 'Atlanta', 'Sydney'], c: 1 },
-    { q: 'Qual foi a primeira escola de Jiu-Jitsu de Kano?', o: ['Kito-ryu', "Tenjin Shin'yo-ryu", 'Daito-ryu', 'Yoshin-ryu'], c: 1 },
+    { q: 'Qual foi a primeira escola de Jujutsu de Kano?', o: ['Kito-ryu', "Tenjin Shin'yo-ryu", 'Daito-ryu', 'Yoshin-ryu'], c: 1 },
     { q: 'Quem foi considerado o "Deus do Judô"?', o: ['Jigoro Kano', 'Kyuzo Mifune', 'Masahiko Kimura', 'Yasuhiro Yamashita'], c: 1 },
     { q: 'Qual a altura de Kyuzo Mifune?', o: ['1,50m', '1,59m', '1,65m', '1,70m'], c: 1 },
     { q: 'Quem foi a primeira mulher graduada faixa preta?', o: ['Keiko Fukuda', 'Sueko Ashiya', 'Rena Kanokogi', 'Ingrid'], c: 1 },
@@ -1088,7 +1226,7 @@ const quizData = {
     { q: 'Qual era a profissão de Kano além de judoca?', o: ['Médico', 'Advogado', 'Educador', 'Militar'], c: 2 },
     { q: 'De onde veio a inspiração para as faixas coloridas?', o: ['Exército', 'Jogo de Go', 'Artes chinesas', 'Sistema escolar'], c: 1 },
     { q: 'Por que Kano não tinha Dan?', o: ['Era jovem', 'Não existia sistema', 'Era o fundador/acima do sistema', 'Perdeu competição'], c: 2 },
-    { q: 'Quando foi o torneio Kodokan vs escolas de Jiu-Jitsu?', o: ['1882', '1884', '1886', '1890'], c: 2 },
+    { q: 'Quando foi o torneio Kodokan vs escolas de Jujutsu?', o: ['1882', '1884', '1886', '1890'], c: 2 },
     { q: 'Qual foi o resultado do torneio de 1886?', o: ['Kodokan perdeu', 'Empate', 'Kodokan venceu', 'Cancelado'], c: 2 },
     { q: 'Quem aplicou a técnica decisiva no torneio de 1886?', o: ['Jigoro Kano', 'Shiro Saigo', 'Tsunejirō Tomita', 'Kyuzo Mifune'], c: 1 },
     { q: 'Em que ano foi estabelecido o Gokyo?', o: ['1882', '1895', '1908', '1920'], c: 2 },
@@ -1593,8 +1731,24 @@ const organizacaoData = {
     { categoria: 'Masters', idade: '30+ anos' },
   ],
   categoriasPeso: {
-    masculino: ['-60kg (Leve)', '-66kg (Meio-Leve)', '-73kg (Ligeiro)', '-81kg (Médio)', '-90kg (Meio-Médio)', '-100kg (Meio-Pesado)', '+100kg (Pesado)'],
-    feminino: ['-48kg (Super-Leve)', '-52kg (Leve)', '-57kg (Meio-Leve)', '-63kg (Ligeiro)', '-70kg (Meio-Médio)', '-78kg (Médio)', '+78kg (Pesado)'],
+    masculino: [
+      { peso: '-60kg', nome: 'Ligeiro' },
+      { peso: '-66kg', nome: 'Meio-Leve' },
+      { peso: '-73kg', nome: 'Leve' },
+      { peso: '-81kg', nome: 'Meio-Médio' },
+      { peso: '-90kg', nome: 'Médio' },
+      { peso: '-100kg', nome: 'Meio-Pesado' },
+      { peso: '+100kg', nome: 'Pesado' }
+    ],
+    feminino: [
+      { peso: '-48kg', nome: 'Ligeiro' },
+      { peso: '-52kg', nome: 'Meio-Leve' },
+      { peso: '-57kg', nome: 'Leve' },
+      { peso: '-63kg', nome: 'Meio-Médio' },
+      { peso: '-70kg', nome: 'Médio' },
+      { peso: '-78kg', nome: 'Meio-Pesado' },
+      { peso: '+78kg', nome: 'Pesado' }
+    ]
   }
 };
 
@@ -1665,6 +1819,11 @@ function renderHome() {
       <h2 class="home-title">Preparação para <span>Faixa Preta</span></h2>
       <p class="home-subtitle">O caminho do judoca começa com um único passo</p>
       <p class="home-quote">"Saber cada dia um pouco mais e usá-lo todos os dias para o bem, esse é o caminho dos verdadeiros judocas."</p>
+    </div>
+    <div class="search-container">
+      <input type="text" id="search-input" class="search-input" placeholder="Buscar técnicas, termos, regras...">
+      <span class="search-icon">🔍</span>
+      <div id="search-results" class="search-results"></div>
     </div>
     <div class="home-grid">${homeCards.map(c => `
       <div class="home-card" onclick="showSection('${c.section}')">
@@ -2079,6 +2238,16 @@ function renderKatameNoKata() {
 
 function renderOrganizacao() {
   const d = organizacaoData;
+  
+  // Criar pares para tabela de idade (2 itens por linha = 4 colunas)
+  const idadePairs = [];
+  for (let i = 0; i < d.categoriasIdade.length; i += 2) {
+    idadePairs.push({
+      left: d.categoriasIdade[i],
+      right: d.categoriasIdade[i + 1] || null
+    });
+  }
+  
   document.getElementById('section-organizacao').innerHTML = `
     <h2 class="section-title"><span class="section-title-icon">🏟️</span> Organização Desportiva</h2>
     <div class="org-card">
@@ -2089,21 +2258,56 @@ function renderOrganizacao() {
     </div>
     <div class="org-card">
       <div class="org-card-title">📊 Categorias por Idade</div>
-      <div class="table-container">
-        <table>
-          <thead><tr><th>Categoria</th><th>Idade</th></tr></thead>
-          <tbody>${d.categoriasIdade.map(c => `<tr><td>${c.categoria}</td><td>${c.idade}</td></tr>`).join('')}</tbody>
-        </table>
-      </div>
+      <table class="org-table">
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th>Idade</th>
+            <th>Categoria</th>
+            <th>Idade</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${idadePairs.map(pair => `
+            <tr>
+              <td>${pair.left.categoria}</td>
+              <td>${pair.left.idade}</td>
+              <td>${pair.right ? pair.right.categoria : ''}</td>
+              <td>${pair.right ? pair.right.idade : ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
     </div>
     <div class="org-card">
-      <div class="org-card-title">⚖️ Categorias de Peso</div>
-      <div class="table-container">
-        <table>
-          <thead><tr><th>Masculino</th><th>Feminino</th></tr></thead>
-          <tbody>${d.categoriasPeso.masculino.map((m, i) => `<tr><td>${m}</td><td>${d.categoriasPeso.feminino[i]}</td></tr>`).join('')}</tbody>
-        </table>
-      </div>
+      <div class="org-card-title">⚖️ Categorias de Peso (Sênior)</div>
+      <table class="org-table">
+        <thead>
+          <tr>
+            <th colspan="2">🚹 Masculino</th>
+            <th colspan="2">🚺 Feminino</th>
+          </tr>
+          <tr>
+            <th>Peso</th>
+            <th>Categoria</th>
+            <th>Peso</th>
+            <th>Categoria</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${d.categoriasPeso.masculino.map((m, i) => {
+            const f = d.categoriasPeso.feminino[i];
+            return `
+              <tr>
+                <td class="peso-val">${m.peso}</td>
+                <td class="peso-nome">${m.nome}</td>
+                <td class="peso-val">${f.peso}</td>
+                <td class="peso-nome">${f.nome}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
     </div>`;
 }
 
@@ -2170,10 +2374,132 @@ function renderSocorros() {
 
 function renderVideos() {
   document.getElementById('section-videos').innerHTML = `
-    <h2 class="section-title"><span class="section-title-icon">映</span> Vídeos e Recursos</h2>
+    <h2 class="section-title"><span class="section-title-icon">映</span> Vídeos Técnicos</h2>
+    <p class="section-desc">Clique na imagem para assistir à demonstração.</p>
+
+    <div class="card mb-24">
+      <h3 class="card-title">投技 Nage-Waza (Técnicas de Projeção)</h3>
+      <div class="video-grid">
+        <div class="video-card">
+          <span class="video-badge">Te-Waza</span>
+          <h4 class="video-title">Ippon Seoi-Nage</h4>
+          <p class="video-subtitle">一本背負投 - Projeção de ombro</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 5)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Ippon Seoi-Nage">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Ashi-Waza</span>
+          <h4 class="video-title">O-Soto-Gari</h4>
+          <p class="video-subtitle">大外刈 - Grande ceifa externa</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 35)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="O-Soto-Gari">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Ashi-Waza</span>
+          <h4 class="video-title">Uchi-Mata</h4>
+          <p class="video-subtitle">内股 - Varrer pela coxa interna</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 125)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Uchi-Mata">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Koshi-Waza</span>
+          <h4 class="video-title">Harai-Goshi</h4>
+          <p class="video-subtitle">払腰 - Varrer pelo quadril</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 95)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Harai-Goshi">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Ashi-Waza</span>
+          <h4 class="video-title">O-Uchi-Gari</h4>
+          <p class="video-subtitle">大内刈 - Grande ceifa interna</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 65)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="O-Uchi-Gari">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Sutemi-Waza</span>
+          <h4 class="video-title">Tomoe-Nage</h4>
+          <p class="video-subtitle">巴投 - Projeção em círculo</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 185)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Tomoe-Nage">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-24">
+      <h3 class="card-title">固技 Katame-Waza (Técnicas de Solo)</h3>
+      <div class="video-grid">
+        <div class="video-card">
+          <span class="video-badge">Kansetsu-Waza</span>
+          <h4 class="video-title">Juji-Gatame</h4>
+          <p class="video-subtitle">十字固 - Chave de braço cruzada</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 615)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Juji-Gatame">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Osaekomi-Waza</span>
+          <h4 class="video-title">Kesa-Gatame</h4>
+          <p class="video-subtitle">袈裟固 - Imobilização em diagonal</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 530)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Kesa-Gatame">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Shime-Waza</span>
+          <h4 class="video-title">Hadaka-Jime</h4>
+          <p class="video-subtitle">裸絞 - Estrangulamento nu</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 680)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Hadaka-Jime">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Osaekomi-Waza</span>
+          <h4 class="video-title">Yoko-Shiho-Gatame</h4>
+          <p class="video-subtitle">横四方固 - Imobilização lateral</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 560)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Yoko-Shiho-Gatame">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Shime-Waza</span>
+          <h4 class="video-title">Okuri-Eri-Jime</h4>
+          <p class="video-subtitle">送襟絞 - Estrangulamento deslizante</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 710)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Okuri-Eri-Jime">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+        <div class="video-card">
+          <span class="video-badge">Kansetsu-Waza</span>
+          <h4 class="video-title">Ude-Garami</h4>
+          <p class="video-subtitle">腕絡 - Chave de braço entrelaçada</p>
+          <div class="video-box" onclick="playVideo(this, 'YOcVfmmMBLY', 645)">
+            <img class="video-thumbnail" src="https://img.youtube.com/vi/YOcVfmmMBLY/hqdefault.jpg" alt="Ude-Garami">
+            <div class="video-play-btn">▶</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
-      <h3 class="card-title">📺 Playlist Recomendada</h3>
-      <p style="color:#aaa;margin-bottom:16px;">Assista demonstrações de Nage-no-Kata, Katame-no-Kata e técnicas do Gokyo.</p>
+      <h3 class="card-title">📺 Recursos Externos</h3>
+      <p style="color:#aaa;margin-bottom:16px;">Playlist e canais recomendados para estudo.</p>
       <a href="https://www.youtube.com/playlist?list=PLU04_RyASRbnwlgUJjClbGGlNqwvkKiW_" target="_blank" class="video-link">
         <span class="video-link-icon">▶️</span>
         <span class="video-link-text">Playlist de Katas - YouTube</span>
@@ -2187,6 +2513,16 @@ function renderVideos() {
         <span class="video-link-text">Ukemi - Quedas (Tutoriais)</span>
       </a>
     </div>`;
+}
+
+function playVideo(element, videoId, startTime = 0) {
+  if (element.classList.contains('playing')) return;
+  element.classList.add('playing');
+  const iframe = document.createElement('iframe');
+  iframe.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&start=' + startTime;
+  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+  iframe.allowFullscreen = true;
+  element.appendChild(iframe);
 }
 
 function renderFlashcardsMenu() {
@@ -2328,6 +2664,7 @@ function renderDashboard() {
           Seu Progresso
         </div>
         <div class="dashboard-actions">
+          <button class="btn-secondary" onclick="showSection('quizMenu')">📚 Continuar Estudando</button>
           <button class="btn-danger" onclick="resetScores()">🗑️ Resetar</button>
         </div>
       </div>
@@ -2365,17 +2702,28 @@ function renderDashboard() {
 }
 
 function renderQuizMenu() {
+  const scores = getScores();
   document.getElementById('section-quizMenu').innerHTML = `
     <h2 class="section-title"><span class="section-title-icon">問</span> Quizzes</h2>
     ${renderDashboard()}
     <p style="color:#aaa;margin-bottom:24px;">Teste seus conhecimentos sobre cada tema do Judô.</p>
-    <div class="quiz-menu-grid">${Object.entries(quizData).map(([k, q]) => `
+    <div class="quiz-menu-grid">${Object.entries(quizData).map(([k, q]) => {
+      const score = scores[k] || { total: 0, correct: 0 };
+      const percent = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+      const statsText = score.total > 0 ? percent + '% de acerto (' + score.correct + '/' + score.total + ')' : 'Não iniciado';
+      const statsClass = score.total > 0 ? 'quiz-menu-stats' : 'quiz-menu-stats not-started';
+      return `
       <button class="quiz-menu-card" onclick="startQuiz('${k}')">
         <div class="quiz-menu-header">
-          <div><h3 class="quiz-menu-title">${q.title}</h3><p class="quiz-menu-count">${q.questions.length} perguntas</p></div>
+          <div>
+            <h3 class="quiz-menu-title">${q.title}</h3>
+            <p class="quiz-menu-count">${q.questions.length} perguntas</p>
+            <p class="${statsClass}">${statsText}</p>
+          </div>
           <span class="quiz-menu-icon">${q.icon}</span>
         </div>
-      </button>`).join('')}
+      </button>`;
+    }).join('')}
     </div>`;
 }
 
@@ -2487,6 +2835,7 @@ function showQuizResult() {
 function init() {
   renderNav();
   renderHome();
+  initSearch();
   renderHistoria();
   renderPrincipios();
   renderEtiqueta();
